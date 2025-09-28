@@ -6,11 +6,21 @@ int main() {
     FILE *f1 = fopen("M1.txt", "r");
     FILE *f2 = fopen("M2.txt", "r");
 
+    if (!f1 || !f2) {
+        printf("Erro ao abrir os arquivos de entrada!\n");
+        return 1;
+    }
+
     int n1, m1, n2, m2;
     fscanf(f1, "%d %d", &n1, &m1);
     fscanf(f2, "%d %d", &n2, &m2);
 
-    int A[n1][m1], B[n2][m2], C[n1][m2];
+    int **A = malloc(n1 * sizeof(int *));
+    int **B = malloc(n2 * sizeof(int *));
+    int **C = malloc(n1 * sizeof(int *));
+    for (int i = 0; i < n1; i++) A[i] = malloc(m1 * sizeof(int));
+    for (int i = 0; i < n2; i++) B[i] = malloc(m2 * sizeof(int));
+    for (int i = 0; i < n1; i++) C[i] = malloc(m2 * sizeof(int));
 
     for (int i = 0; i < n1; i++)
         for (int j = 0; j < m1; j++)
@@ -48,5 +58,14 @@ int main() {
     fclose(fout);
 
     printf("Resultado salvo em ResultadoSeq.txt\n");
+
+    for (int i = 0; i < n1; i++) free(A[i]);
+    for (int i = 0; i < n2; i++) free(B[i]);
+    for (int i = 0; i < n1; i++) free(C[i]);
+    free(A);
+    free(B);
+    free(C);
+
     return 0;
 }
+
