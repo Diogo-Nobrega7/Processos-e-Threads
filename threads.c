@@ -6,65 +6,45 @@
 
 int **A, **B, **C;
 int n1, m1, n2, m2;
+
 int P; 
 
 typedef struct {
-    int id;
-    int start, end;
+    int startIdx, endIdx;
 } ThreadData;
 
 void *multiplica(void *arg) {
     ThreadData *data = (ThreadData *)arg;
 
-    clock_t start_time = clock(); 
-
-    for (int idx = data->start; idx < data->end; idx++) {
+   
+    for (int idx = data->startIdx; idx < data->endIdx; idx++) {
         int i = idx / m2;
         int j = idx % m2;
+        
         C[i][j] = 0;
         for (int k = 0; k < m1; k++) {
+
             C[i][j] += A[i][k] * B[k][j];
         }
     }
-
-    clock_t end_time = clock(); 
-
-  
-    char filename[64];
-    sprintf(filename, "ResultadoThreads_%d.txt", data->id);
-
-    FILE *fout = fopen(filename, "w");
-    if (!fout) {
-        perror("Erro ao criar arquivo de saída");
-        pthread_exit(NULL);
-    }
-
- 
-    fprintf(fout, "%d %d\n", n1, m2);
-
-
-    for (int idx = data->start; idx < data->end; idx++) {
-        int i = idx / m2;
-        int j = idx % m2;
-        fprintf(fout, "%d %d %d\n", i, j, C[i][j]); 
-        
-    }
-
-    double tempo = (double)(end_time - start_time) / CLOCKS_PER_SEC;
-    fprintf(fout, "Tempo thread %d: %f segundos\n", data->id, tempo);
-
-    fclose(fout);
+    
     pthread_exit(NULL);
 }
 
 int main(int argc, char *argv[]) {
+    
     if (argc != 2) {
-        printf("Uso: %s P\n", argv[0]);
+        printf("Uso: %s P (P = numero de threads)\n", argv[0]);
         return 1;
     }
 
     P = atoi(argv[1]); 
-
+    if (P <= 0) {
+        printf("O numero de threads (P) deve ser maior que zero.\n");
+        return 1;
+    }
+    
+    
     FILE *f1 = fopen("M1.txt", "r");
     FILE *f2 = fopen("M2.txt", "r");
 
@@ -75,6 +55,13 @@ int main(int argc, char *argv[]) {
 
     fscanf(f1, "%d %d", &n1, &m1);
     fscanf(f2, "%d %d", &n2, &m2);
+
+    if (m1 != n2) {
+        printf("As dimensoes das matrizes nao sao compativeis para multiplicacao!\n");
+        fclose(f1);
+        fclose(f2);
+        return 1;
+    }
 
 
     A = malloc(n1 * sizeof(int *));
@@ -96,31 +83,65 @@ int main(int argc, char *argv[]) {
     fclose(f2);
 
     int total = n1 * m2;
-    int num_threads = (total + P - 1) / P; 
+    int chunk = (total + P - 1) / P; 
 
-    pthread_t threads[num_threads];
-    ThreadData data[num_threads];
+    pthread_t *threads = malloc(P * sizeof(pthread_t));
+    ThreadData *data = malloc(P * sizeof(ThreadData));
+    
+   
+    clock_t start = clock();
 
-    for (int t = 0; t < num_threads; t++) {
-        data[t].id = t;
-        data[t].start = t * P;
-        data[t].end = (t + 1) * P;
-        if (data[t].end > total) data[t].end = total;
-        pthread_create(&threads[t], NULL, multiplica, &data[t]);
+    for (int t = 0; t < P; t++) {
+        data[t].startIdx = t * chunk;
+        data[t].endIdx = (t + 1) * chunk;
+        if (data[t].endIdx > total) data[t].endIdx = total;
+        
+        if (pthread_create(&threads[t], NULL, multiplica, &data[t]) != 0) {
+             perror("Erro ao criar thread");
+             
+             return 1;
+        }
     }
 
-    for (int t = 0; t < num_threads; t++) {
+
+    for (int t = 0; t < P; t++) {
         pthread_join(threads[t], NULL);
     }
 
-    printf("%d arquivos de saída gerados (ResultadoThreads_X.txt)\n", num_threads);
+    clock_t end = clock();
+    double tempo_total = (double)(end - start) / CLOCKS_PER_SEC;
 
+
+    
+    FILE *fout = fopen("ResultadoThreads.txt", "w");
+    if (!fout) {
+        perror("Erro ao criar arquivo de saida final");
+        return 1;
+    }
+
+    fprintf(fout, "%d %d\n", n1, m2);
+    for (int i = 0; i < n1; i++) {
+        for (int j = 0; j < m2; j++) {
+            fprintf(fout, "%d ", C[i][j]);
+        }
+        fprintf(fout, "\n");
+    }
+    fprintf(fout, "Tempo: %f segundos\n", tempo_total);
+    fclose(fout);
+
+    printf("Resultado salvo em ResultadoThreads.txt\n");
+    printf("Tempo total de execucao com %d threads: %f segundos\n", P, tempo_total);
+
+    
     for (int i = 0; i < n1; i++) free(A[i]);
     for (int i = 0; i < n2; i++) free(B[i]);
     for (int i = 0; i < n1; i++) free(C[i]);
     free(A); free(B); free(C);
+    free(threads);
+    free(data);
 
     return 0;
 }
+
 
 
