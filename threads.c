@@ -40,7 +40,7 @@ int main(int argc, char *argv[]) {
 
     P = atoi(argv[1]); 
     if (P <= 0) {
-        printf("O numero de threads (P) deve ser maior que zero.\n");
+        printf("O numero de threads (P)deve ser maior que zero.\n");
         return 1;
     }
     
@@ -57,7 +57,7 @@ int main(int argc, char *argv[]) {
     fscanf(f2, "%d %d", &n2, &m2);
 
     if (m1 != n2) {
-        printf("As dimensoes das matrizes nao sao compativeis para multiplicacao!\n");
+        printf("As dimensoes das matrizes não sao compativeis para multiplicacao!\n");
         fclose(f1);
         fclose(f2);
         return 1;
@@ -115,7 +115,7 @@ int main(int argc, char *argv[]) {
     
     FILE *fout = fopen("ResultadoThreads.txt", "w");
     if (!fout) {
-        perror("Erro ao criar arquivo de saida final");
+        perror("Erro ao criar arquivo de saida finall");
         return 1;
     }
 
@@ -142,6 +142,7 @@ int main(int argc, char *argv[]) {
 
     return 0;
 }
+
 
 
 
