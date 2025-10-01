@@ -28,7 +28,7 @@ int main(int argc, char *argv[]) {
     fscanf(f2, "%d %d", &n2, &m2);
 
     if (m1 != n2) {
-        printf("As dimensoes das matrizes nao sao compativeis para multiplicacao!\n");
+        printf("As dimensoes das matrizes não são compativeis para multiplicacao!\n");
         fclose(f1);
         fclose(f2);
         return 1;
@@ -139,3 +139,4 @@ int main(int argc, char *argv[]) {
 
     return 0;
 }
+
